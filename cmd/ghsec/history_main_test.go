@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/yukiu/ghsec/internal/api"
-	"github.com/yukiu/ghsec/internal/config"
+	"github.com/yuuuuukiu/ghsec/internal/api"
+	"github.com/yuuuuukiu/ghsec/internal/config"
 )
 
 func TestRecordSubmissionStoresIdentifiersOnly(t *testing.T) {

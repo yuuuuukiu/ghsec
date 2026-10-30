@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/yukiu/ghsec/internal/api"
+	"github.com/yuuuuukiu/ghsec/internal/api"
 )
 
 // Colour palette. Chosen for contrast on both dark and light terminals.

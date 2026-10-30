@@ -14,7 +14,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/yukiu/ghsec/internal/api"
+	"github.com/yuuuuukiu/ghsec/internal/api"
 )
 
 // mockGitHub records requests and replies with a canned advisory.

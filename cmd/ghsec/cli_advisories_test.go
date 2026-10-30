@@ -20,7 +20,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/yukiu/ghsec/internal/api"
+	"github.com/yuuuuukiu/ghsec/internal/api"
 )
 
 // testAdvisoryIDs are two well-formed GHSA identifiers used by the fixtures.

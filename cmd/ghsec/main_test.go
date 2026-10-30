@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/yukiu/ghsec/internal/api"
-	"github.com/yukiu/ghsec/internal/config"
-	"github.com/yukiu/ghsec/internal/tui"
+	"github.com/yuuuuukiu/ghsec/internal/api"
+	"github.com/yuuuuukiu/ghsec/internal/config"
+	"github.com/yuuuuukiu/ghsec/internal/tui"
 )
 
 func TestOwnerOfAndRepoOf(t *testing.T) {

@@ -14,10 +14,10 @@ import (
 
 	"github.com/mattn/go-isatty"
 
-	"github.com/yukiu/ghsec/internal/api"
-	"github.com/yukiu/ghsec/internal/config"
-	"github.com/yukiu/ghsec/internal/editor"
-	"github.com/yukiu/ghsec/internal/tui"
+	"github.com/yuuuuukiu/ghsec/internal/api"
+	"github.com/yuuuuukiu/ghsec/internal/config"
+	"github.com/yuuuuukiu/ghsec/internal/editor"
+	"github.com/yuuuuukiu/ghsec/internal/tui"
 )
 
 // Build metadata, injected via -ldflags at release time.
@@ -56,7 +56,7 @@ Environment:
 Exit codes:
   0 success   1 runtime failure   2 invalid usage   130 interrupted
 
-Docs: https://github.com/yukiu/ghsec`
+Docs: https://github.com/yuuuuukiu/ghsec`
 
 // verifyTimeout bounds the token verification call.
 const verifyTimeout = 30 * time.Second

@@ -17,7 +17,7 @@ import (
 
 	"github.com/charmbracelet/huh"
 
-	"github.com/yukiu/ghsec/internal/api"
+	"github.com/yuuuuukiu/ghsec/internal/api"
 )
 
 const (

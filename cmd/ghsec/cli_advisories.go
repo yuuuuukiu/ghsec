@@ -27,8 +27,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/yukiu/ghsec/internal/api"
-	"github.com/yukiu/ghsec/internal/editor"
+	"github.com/yuuuuukiu/ghsec/internal/api"
+	"github.com/yuuuuukiu/ghsec/internal/editor"
 )
 
 // Limits shared by the paged read commands.

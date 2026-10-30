@@ -26,10 +26,10 @@ import (
 
 	"github.com/mattn/go-isatty"
 
-	"github.com/yukiu/ghsec/internal/api"
-	"github.com/yukiu/ghsec/internal/config"
-	"github.com/yukiu/ghsec/internal/editor"
-	"github.com/yukiu/ghsec/internal/tui"
+	"github.com/yuuuuukiu/ghsec/internal/api"
+	"github.com/yuuuuukiu/ghsec/internal/config"
+	"github.com/yuuuuukiu/ghsec/internal/editor"
+	"github.com/yuuuuukiu/ghsec/internal/tui"
 )
 
 // Exit codes used by the CLI surface.

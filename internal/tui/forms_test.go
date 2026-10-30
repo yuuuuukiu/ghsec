@@ -8,7 +8,7 @@ import (
 
 	"github.com/charmbracelet/huh"
 
-	"github.com/yukiu/ghsec/internal/api"
+	"github.com/yuuuuukiu/ghsec/internal/api"
 )
 
 func TestValidateRepoSpecValid(t *testing.T) {

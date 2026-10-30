@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/yukiu/ghsec/internal/api"
+	"github.com/yuuuuukiu/ghsec/internal/api"
 )
 
 // viewsPlainText returns only the printable text of a rendered view.

@@ -1,6 +1,6 @@
 # ghsec — Shared Package Contract (read before writing code)
 
-Module: `github.com/yukiu/ghsec`   Go 1.24.3
+Module: `github.com/yuuuuukiu/ghsec`   Go 1.24.3
 TUI stack: huh v1.0.0, lipgloss v1.1.1-0.20250404203927-76690c660834, glamour v1.0.0
 
 ## File ownership (DO NOT edit files outside your scope)

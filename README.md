@@ -35,7 +35,7 @@ without leaving the shell — no runtime, no browser, no copy-pasting tokens int
 
 ```bash
 # from source
-go install github.com/yukiu/ghsec/cmd/ghsec@latest
+go install github.com/yuuuuukiu/ghsec/cmd/ghsec@latest
 
 # or build every release target at once
 make build-all     # -> dist/ghsec-{darwin,linux,windows}-{amd64,arm64}

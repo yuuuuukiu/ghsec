@@ -1,4 +1,4 @@
-module github.com/yukiu/ghsec
+module github.com/yuuuuukiu/ghsec
 
 go 1.24.3
 
