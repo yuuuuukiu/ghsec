@@ -84,7 +84,6 @@ jobs:
       - name: Build every platform
         env:
           COMMIT: ${{ github.sha }}
-          SOURCE_DATE_EPOCH: ${{ github.event.repository.pushed_at }}
         run: |
           ./scripts/build-release.sh "${{ steps.version.outputs.version }}" --dist dist
 

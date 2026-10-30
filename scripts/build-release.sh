@@ -63,6 +63,9 @@ TARGETS=(
 LDFLAGS="-s -w -X main.version=${VERSION} -X main.commit=${COMMIT} -X main.buildDate=${DATE}"
 
 mkdir -p "$DIST"
+# Absolute, so the zip subshell can address archives correctly even when the
+# caller passed an absolute --dist.
+DIST="$(cd "$DIST" && pwd)"
 STAGE="$DIST/.stage"
 rm -rf "$STAGE"
 mkdir -p "$STAGE"
@@ -95,7 +98,7 @@ for target in "${TARGETS[@]}"; do
 	if [[ "$os" == "windows" ]]; then
 		archive="$DIST/${name}.zip"
 		rm -f "$archive"
-		(cd "$STAGE" && zip -q -9 "$OLDPWD/$archive" "$bin" LICENSE README.md)
+		(cd "$STAGE" && zip -q -9 "$archive" "$bin" LICENSE README.md)
 	else
 		archive="$DIST/${name}.tar.gz"
 		rm -f "$archive"
@@ -103,8 +106,21 @@ for target in "${TARGETS[@]}"; do
 		# so fall back to a plain archive there. COPYFILE_DISABLE stops macOS
 		# from injecting AppleDouble ._ files into the tarball.
 		if tar --version 2>/dev/null | grep -q "GNU tar"; then
+			# SOURCE_DATE_EPOCH must be integer seconds; convert it if a caller
+			# supplied an ISO-8601 timestamp instead (GNU tar otherwise reads a
+			# garbage epoch and fails).
+			epoch="$(date -u +%s)"
+			if [[ "${SOURCE_DATE_EPOCH:-}" =~ ^[0-9]+$ ]]; then
+				epoch="$SOURCE_DATE_EPOCH"
+			elif [[ -n "${SOURCE_DATE_EPOCH:-}" ]]; then
+				if converted="$(date -u -d "$SOURCE_DATE_EPOCH" +%s 2>/dev/null)"; then
+					epoch="$converted"
+				else
+					echo "warning: ignoring unparsable SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}" >&2
+				fi
+			fi
 			tar --format=ustar --owner=0 --group=0 --numeric-owner \
-				--mtime="@${SOURCE_DATE_EPOCH:-$(date -u +%s)}" \
+				--mtime="@${epoch}" \
 				-czf "$archive" -C "$STAGE" "$bin" LICENSE README.md
 		else
 			COPYFILE_DISABLE=1 tar -czf "$archive" -C "$STAGE" "$bin" LICENSE README.md
