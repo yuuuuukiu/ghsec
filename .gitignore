@@ -1,0 +1,24 @@
+# Build output
+dist/
+/ghsec
+/ghsec.exe
+*.test
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*~
+
+# Local configuration and credentials (never commit these)
+config.json
+.env
+.env.*
+
+# Unrelated files that do not belong to this Go project
+/index.js
+/package.json
