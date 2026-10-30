@@ -1,5 +1,11 @@
 # ghsec
 
+[![CI](https://github.com/yuuuuukiu/ghsec/actions/workflows/ci.yml/badge.svg)](https://github.com/yuuuuukiu/ghsec/actions/workflows/ci.yml)
+[![Release](https://github.com/yuuuuukiu/ghsec/actions/workflows/release.yml/badge.svg)](https://github.com/yuuuuukiu/ghsec/actions/workflows/release.yml)
+[![Latest release](https://img.shields.io/github/v/release/yuuuuukiu/ghsec)](https://github.com/yuuuuukiu/ghsec/releases/latest)
+[![Go version](https://img.shields.io/github/go-mod/go-version/yuuuuukiu/ghsec)](go.mod)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 `ghsec` is a cross-platform terminal UI for **GitHub Security Advisories**. It lets security
 researchers file private vulnerability reports and lets maintainers draft repository advisories
 without leaving the shell — no runtime, no browser, no copy-pasting tokens into web forms.
@@ -33,17 +39,62 @@ without leaving the shell — no runtime, no browser, no copy-pasting tokens int
 
 ## Install
 
-```bash
-# from source
-go install github.com/yuuuuukiu/ghsec/cmd/ghsec@latest
+### One line
 
-# or build every release target at once
-make build-all     # -> dist/ghsec-{darwin,linux,windows}-{amd64,arm64}
-make size          # artefact table
+```sh
+# macOS and Linux
+curl -fsSL https://raw.githubusercontent.com/yuuuuukiu/ghsec/main/install.sh | sh
 ```
 
-Binaries are statically linked (`CGO_ENABLED=0`), stripped with `-ldflags="-s -w"`, and need no
-Go toolchain, Python, or Node runtime on the target machine.
+```powershell
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/yuuuuukiu/ghsec/main/install.ps1 | iex
+```
+
+The installers detect your platform, download the matching release archive, **verify
+its SHA-256 against the published `SHA256SUMS`**, and drop a single binary on your
+`PATH`. They never use `sudo` and never edit your shell profile.
+
+Pin a version or choose the directory with environment variables:
+
+```sh
+GHSEC_VERSION=v1.0.0 GHSEC_INSTALL_DIR="$HOME/bin" \
+  curl -fsSL https://raw.githubusercontent.com/yuuuuukiu/ghsec/main/install.sh | sh
+```
+
+### Supported platforms
+
+Every release ships these builds, each statically linked (`CGO_ENABLED=0`), stripped
+with `-ldflags="-s -w"`, and free of any Go, Python or Node runtime dependency:
+
+| Platform | Architecture | Archive |
+|---|---|---|
+| macOS | Apple Silicon (arm64) | `ghsec_<version>_darwin_arm64.tar.gz` |
+| macOS | Intel (amd64) | `ghsec_<version>_darwin_amd64.tar.gz` |
+| Linux | x86-64 (amd64) | `ghsec_<version>_linux_amd64.tar.gz` |
+| Linux | arm64 | `ghsec_<version>_linux_arm64.tar.gz` |
+| Windows | x86-64 (amd64) | `ghsec_<version>_windows_amd64.zip` |
+| Windows | arm64 | `ghsec_<version>_windows_arm64.zip` |
+
+Browse them on the [releases page](https://github.com/yuuuuukiu/ghsec/releases).
+Each archive contains the binary plus `LICENSE` and `README.md`.
+
+### From source
+
+```bash
+go install github.com/yuuuuukiu/ghsec/cmd/ghsec@latest
+
+# or clone and build every target locally
+make build-all     # -> dist/ghsec-{darwin,linux,windows}-{amd64,arm64}
+make size          # artefact table + ~15 MB budget check
+```
+
+### Verify a manual download
+
+```sh
+sha256sum -c SHA256SUMS --ignore-missing    # Linux
+shasum -a 256 -c SHA256SUMS                 # macOS
+```
 
 ## Usage
 
@@ -241,7 +292,24 @@ make build-all  # six release targets
 make size       # sizes + ~15 MB budget enforcement
 make e2e        # PTY-driven acceptance suite (needs python3)
 make accept     # everything above, in order
+
+make release VERSION=v1.0.0      # build all platform archives + SHA256SUMS locally
+make release-tag VERSION=v1.0.0  # tag and push, which publishes the release
 ```
+
+### Releasing
+
+Pushing a `v*` tag triggers `.github/workflows/release.yml`, which runs the test
+suite, builds all six platform archives with the same `scripts/build-release.sh`
+used locally, and publishes them with a `SHA256SUMS` file and the installers:
+
+```bash
+make release-tag VERSION=v1.0.0
+```
+
+`ci.yml` runs gofmt, `go vet`, `go test -race` on Linux/macOS/Windows, the
+PTY acceptance suite on Linux and macOS, and the cross-compile + size budget
+check, so a broken commit cannot reach a tag.
 
 `make e2e` drives the real binary through a pseudo-terminal: it walks onboarding,
 interrupts it with `Ctrl+C`, feeds a corrupt config, checks `0600`/`0700`

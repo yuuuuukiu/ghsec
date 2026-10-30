@@ -1,0 +1,162 @@
+name: Release
+
+# Publishes a full set of platform builds whenever a version tag is pushed.
+#
+#   git tag v1.0.0 && git push origin v1.0.0
+#
+# The same scripts/build-release.sh used by `make release` produces the
+# artefacts here, so a local build and a published release cannot drift.
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Tag to (re)build, for example v1.0.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  GOFLAGS: -mod=readonly
+
+jobs:
+  # Never publish artefacts that have not passed the test suite.
+  test:
+    name: test before release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Verify gofmt
+        run: |
+          out="$(gofmt -l .)"
+          if [ -n "$out" ]; then
+            echo "these files are not gofmt-formatted:"
+            echo "$out"
+            exit 1
+          fi
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: go test
+        run: go test ./... -race -count=1
+
+      - name: end-to-end acceptance suite
+        run: |
+          go build -trimpath -ldflags="-s -w" -o dist/ghsec ./cmd/ghsec
+          python3 scripts/e2e.py dist/ghsec
+
+  release:
+    name: build and publish
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Resolve the version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            version="${{ inputs.version }}"
+          else
+            version="${GITHUB_REF_NAME}"
+          fi
+          echo "version=${version}" >>"$GITHUB_OUTPUT"
+          echo "number=${version#v}" >>"$GITHUB_OUTPUT"
+
+      - name: Build every platform
+        env:
+          COMMIT: ${{ github.sha }}
+          SOURCE_DATE_EPOCH: ${{ github.event.repository.pushed_at }}
+        run: |
+          ./scripts/build-release.sh "${{ steps.version.outputs.version }}" --dist dist
+
+      - name: List the artefacts
+        run: ls -lh dist
+
+      - name: Publish the GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          NUMBER: ${{ steps.version.outputs.number }}
+        run: |
+          notes="$(cat <<EOF
+          ## ghsec ${VERSION}
+
+          Terminal UI and CLI for GitHub Security Advisories: file private vulnerability
+          reports, manage repository advisories, reply to reporters, and request CVEs.
+
+          ### Install
+
+          macOS / Linux:
+
+          \`\`\`sh
+          curl -fsSL https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/install.sh | sh
+          \`\`\`
+
+          Windows (PowerShell):
+
+          \`\`\`powershell
+          irm https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/install.ps1 | iex
+          \`\`\`
+
+          ### Platforms
+
+          | Platform | Architecture | Archive |
+          |---|---|---|
+          | macOS | Apple Silicon (arm64) | \`ghsec_${NUMBER}_darwin_arm64.tar.gz\` |
+          | macOS | Intel (amd64) | \`ghsec_${NUMBER}_darwin_amd64.tar.gz\` |
+          | Linux | x86-64 (amd64) | \`ghsec_${NUMBER}_linux_amd64.tar.gz\` |
+          | Linux | arm64 | \`ghsec_${NUMBER}_linux_arm64.tar.gz\` |
+          | Windows | x86-64 (amd64) | \`ghsec_${NUMBER}_windows_amd64.zip\` |
+          | Windows | arm64 | \`ghsec_${NUMBER}_windows_arm64.zip\` |
+
+          Every archive is statically linked, needs no runtime, and ships with
+          \`LICENSE\` and \`README.md\`.
+
+          ### Verify your download
+
+          \`\`\`sh
+          sha256sum -c SHA256SUMS --ignore-missing
+          \`\`\`
+
+          The installers verify these checksums automatically.
+          EOF
+          )"
+
+          # Idempotent: re-running a tag build replaces the existing assets
+          # instead of failing.
+          if gh release view "${VERSION}" >/dev/null 2>&1; then
+            echo "release ${VERSION} exists; replacing its assets"
+            gh release upload "${VERSION}" dist/*.tar.gz dist/*.zip dist/SHA256SUMS --clobber
+            gh release edit "${VERSION}" --notes "$notes" --title "ghsec ${VERSION}"
+          else
+            gh release create "${VERSION}" \
+              dist/*.tar.gz dist/*.zip dist/SHA256SUMS \
+              --title "ghsec ${VERSION}" \
+              --notes "$notes" \
+              --verify-tag
+          fi
+
+      - name: Publish the installers as release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: gh release upload "${VERSION}" install.sh install.ps1 --clobber

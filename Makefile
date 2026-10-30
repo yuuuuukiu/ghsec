@@ -18,7 +18,7 @@ GOBIN_TARGETS := \
 	$(DIST)/$(BINARY)-windows-amd64.exe \
 	$(DIST)/$(BINARY)-windows-arm64.exe
 
-.PHONY: all build run test test-race vet fmt lint check clean tidy build-all checksums size e2e accept help
+.PHONY: all build run test test-race vet fmt lint check clean tidy build-all checksums size e2e accept release release-tag help
 
 all: check build
 
@@ -72,6 +72,16 @@ e2e: build ## Run the PTY-driven end-to-end acceptance suite
 accept: check build-all size e2e ## Full acceptance run (lint, tests, cross-compile, size, e2e)
 	@echo
 	@echo "acceptance complete: unit tests, 6 cross-compiled targets, size budget, e2e"
+
+release: ## Build release archives for every platform (VERSION=vX.Y.Z required)
+	@test -n "$(VERSION)" || { echo "usage: make release VERSION=v1.0.0" >&2; exit 2; }
+	./scripts/build-release.sh "$(VERSION)"
+
+release-tag: ## Tag the current commit and push it, which triggers the release workflow
+	@test -n "$(VERSION)" || { echo "usage: make release-tag VERSION=v1.0.0" >&2; exit 2; }
+	git tag -a "$(VERSION)" -m "ghsec $(VERSION)"
+	git push origin "$(VERSION)"
+	@echo "pushed $(VERSION); the Release workflow will build and publish every platform"
 
 size: build-all ## Report sizes and enforce the ~15 MB budget
 	@bash scripts/check-size.sh $(DIST)
