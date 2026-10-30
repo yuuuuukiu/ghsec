@@ -357,7 +357,10 @@ func TestReadFile(t *testing.T) {
 
 	t.Run("home expansion", func(t *testing.T) {
 		home := t.TempDir()
+		// os.UserHomeDir reads %USERPROFILE% on Windows and $HOME on Unix, so
+		// both must point at the fixture for the expansion to resolve.
 		t.Setenv("HOME", home)
+		t.Setenv("USERPROFILE", home)
 		if err := os.WriteFile(filepath.Join(home, "file.md"), []byte("from home\n"), 0o600); err != nil {
 			t.Fatalf("write home file: %v", err)
 		}

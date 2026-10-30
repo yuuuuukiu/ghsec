@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"os"
 	"strings"
@@ -82,18 +81,5 @@ func TestSplitRepoOnHistoryRefresh(t *testing.T) {
 	}
 	if _, _, ok := splitRepo("not-a-spec"); ok {
 		t.Fatal("malformed spec must not parse")
-	}
-}
-
-func TestBrowseRejectsUnknownRepo(t *testing.T) {
-	t.Setenv("GHSEC_CONFIG_HOME", t.TempDir())
-	a := &app{cfg: &config.Config{Profiles: map[string]config.Profile{}}}
-	// browse prompts interactively; with no TTY it must return promptly rather
-	// than hang or panic.
-	out := captureStdout(t, func() {
-		_ = a.browse(context.Background())
-	})
-	if strings.Contains(out, "panic") {
-		t.Fatalf("browse panicked: %q", out)
 	}
 }

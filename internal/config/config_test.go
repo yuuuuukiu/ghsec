@@ -26,6 +26,12 @@ func TestDirHonoursOverrideAndXDG(t *testing.T) {
 		t.Fatalf("Dir() = %q, want %q", got, dir)
 	}
 
+	if runtime.GOOS == "windows" {
+		// Dir() resolves %APPDATA% on Windows and deliberately ignores the Unix
+		// XDG_CONFIG_HOME convention, so there is nothing to assert here.
+		return
+	}
+
 	t.Setenv(configHomeEnv, "")
 	xdg := t.TempDir()
 	t.Setenv("XDG_CONFIG_HOME", xdg)
