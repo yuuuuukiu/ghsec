@@ -76,12 +76,22 @@ func prepareForm(f *huh.Form) (*huh.Form, error) {
 // runFormSafely runs a form and converts any panic raised by the TUI libraries
 // into an ordinary error, so a rendering bug in a dependency can never take the
 // whole program (and the user's terminal state) down with it.
-func runFormSafely(f *huh.Form) (err error) {
+func runFormSafely(f *huh.Form) error {
+	return safeCall(f.Run)
+}
+
+// safeCall runs fn, converting any panic into an ordinary error.
+//
+// It is separate from runFormSafely so the recovery behaviour can be tested
+// without starting a real form: running one would attach to the terminal and
+// block forever on Windows, where the console read does not return EOF the way
+// a redirected stdin does on Unix.
+func safeCall(fn func() error) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("this screen could not be rendered in the current terminal: %v "+
 				"(try resizing the window or running in a different terminal)", r)
 		}
 	}()
-	return f.Run()
+	return fn()
 }

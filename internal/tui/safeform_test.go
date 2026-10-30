@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -33,15 +34,29 @@ func TestPrepareFormIsRenderableInAllTerminalStates(t *testing.T) {
 	}
 }
 
-func TestRunFormSafelyConvertsPanicToError(t *testing.T) {
-	// runFormSafely must never let a dependency panic escape. We cannot easily
-	// make huh panic on demand, so assert the contract via a form that fails
-	// fast: it must return an error rather than panic, and must not block.
-	form := huh.NewForm(huh.NewGroup(huh.NewNote().Title("note").Next(true)))
-	if err := runFormSafely(form); err != nil {
-		if strings.Contains(err.Error(), "panic") {
-			t.Logf("runFormSafely surfaced a rendering problem as an error: %v", err)
-		}
+// TestSafeCallConvertsPanicToError verifies the panic guard without running a
+// real form. Starting a form would attach to the terminal, which blocks forever
+// on Windows CI because the console read never returns EOF there.
+func TestSafeCallConvertsPanicToError(t *testing.T) {
+	err := safeCall(func() error { panic("renderer exploded") })
+	if err == nil {
+		t.Fatal("safeCall must convert a panic into an error")
+	}
+	if !strings.Contains(err.Error(), "renderer exploded") {
+		t.Fatalf("error should carry the panic value, got %q", err.Error())
+	}
+	if !strings.Contains(err.Error(), "terminal") {
+		t.Fatalf("error should suggest a terminal remedy, got %q", err.Error())
+	}
+}
+
+func TestSafeCallPassesThroughSuccess(t *testing.T) {
+	if err := safeCall(func() error { return nil }); err != nil {
+		t.Fatalf("safeCall(nil-returning) = %v", err)
+	}
+	sentinel := errors.New("boom")
+	if err := safeCall(func() error { return sentinel }); !errors.Is(err, sentinel) {
+		t.Fatalf("safeCall should return fn's error unchanged, got %v", err)
 	}
 }
 
