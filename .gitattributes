@@ -1,0 +1,19 @@
+# Normalise line endings so a Windows checkout behaves like a Linux one.
+#
+# Without this, Git's core.autocrlf on Windows rewrites every file to CRLF on
+# checkout. Go source must stay LF: gofmt treats CRLF files as unformatted, so
+# `gofmt -l .` fails on Windows CI even though the repository is clean.
+* text=auto eol=lf
+
+# Never touch binaries.
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.gz binary
+*.exe binary
+
+# Scripts that must keep LF even if someone edits them on Windows.
+*.sh text eol=lf
+*.ps1 text eol=crlf

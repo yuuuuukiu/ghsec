@@ -255,27 +255,26 @@ func TestOpenWithTempFileIsPrivate(t *testing.T) {
 		t.Skip("shell script based test")
 	}
 	dir := t.TempDir()
-	marker := filepath.Join(dir, "mode.txt")
-	// GNU stat uses -c, BSD stat uses -f; try both.
-	script := writeScript(t, dir, "mode-editor.sh",
-		`(stat -f '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1" 2>/dev/null) > "$GHSEC_MODE_MARKER"`)
+	// The fake editor copies the temp file aside so the test can inspect it in
+	// Go after OpenWith has removed the original. Shelling out to `stat` was
+	// not portable: on GNU coreutils `stat -f` means "file system status", so
+	// the BSD-style invocation succeeded and printed a filesystem block instead
+	// of the mode, which made this assertion fail only on Linux.
+	copyPath := filepath.Join(dir, "copy.md")
+	script := writeScript(t, dir, "copy-editor.sh", `cp "$1" "$GHSEC_COPY_MARKER"`)
 
-	t.Setenv("GHSEC_MODE_MARKER", marker)
+	t.Setenv("GHSEC_COPY_MARKER", copyPath)
 
 	if _, err := OpenWith(Editor{Name: script}, "secret vulnerability\n"); err != nil {
 		t.Fatalf("OpenWith: %v", err)
 	}
 
-	raw, err := os.ReadFile(marker)
+	info, err := os.Stat(copyPath)
 	if err != nil {
-		t.Fatalf("read marker: %v", err)
+		t.Fatalf("stat the captured temp file: %v", err)
 	}
-	mode := strings.TrimSpace(string(raw))
-	if mode == "" {
-		t.Skip("stat is unavailable in this environment")
-	}
-	if mode != "600" {
-		t.Fatalf("temp file mode = %q, want 600", mode)
+	if got := info.Mode().Perm(); got != 0o600 {
+		t.Fatalf("temp file mode = %o, want 600", got)
 	}
 }
 

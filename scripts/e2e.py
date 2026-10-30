@@ -254,7 +254,7 @@ def scenario_config_permissions(home: str) -> None:
             "import (\n"
             "\t\"fmt\"\n"
             "\t\"os\"\n"
-            "\t\"github.com/yukiu/ghsec/internal/config\"\n"
+            "\t\"github.com/yuuuuukiu/ghsec/internal/config\"\n"
             ")\n\n"
             "func main() {\n"
             "\tc := &config.Config{Profiles: map[string]config.Profile{}}\n"

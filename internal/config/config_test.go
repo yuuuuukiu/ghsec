@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -105,15 +106,19 @@ func TestSaveLoadRoundTripAndPermissions(t *testing.T) {
 	if err != nil {
 		t.Fatalf("stat config: %v", err)
 	}
-	if perm := info.Mode().Perm(); perm != FileMode {
-		t.Fatalf("config permissions = %o, want %o", perm, FileMode)
-	}
-	dirInfo, err := os.Stat(dir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if perm := dirInfo.Mode().Perm(); perm != DirMode {
-		t.Fatalf("config dir permissions = %o, want %o", perm, DirMode)
+	// Windows has no POSIX permission bits; os.Stat always reports 0666 there,
+	// so the 0600 contract is only meaningful (and only enforced) on Unix.
+	if runtime.GOOS != "windows" {
+		if perm := info.Mode().Perm(); perm != FileMode {
+			t.Fatalf("config permissions = %o, want %o", perm, FileMode)
+		}
+		dirInfo, err := os.Stat(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if perm := dirInfo.Mode().Perm(); perm != DirMode {
+			t.Fatalf("config dir permissions = %o, want %o", perm, DirMode)
+		}
 	}
 
 	loaded, err := Load()
